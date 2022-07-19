@@ -5,6 +5,13 @@ import matplotlib.pyplot as plt
 from PIL import Image, ImageOps, ImageColor
 
 img_folder = "panoptic_val2017/"
+json_folder = "image_json/" # folder for per-image json outputs
+
+
+
+    
+
+
 
 def main():
 
@@ -16,6 +23,28 @@ def main():
 
 #    for image in data["images"]:
 #        print(json.dumps(image, indent = 4, sort_keys=True))
+
+    for img_info in data["images"]:
+        img_name = img_info["file_name"]
+        imp_name_png = img_name.split(".")[0] + ".png"
+        img_location = img_folder + imp_name_png
+        img_name_json = img_name.split(".")[0] + ".json"
+
+        img_dict = {
+            "id": img_info["id"],
+            "file_name": img_info["file_name"],
+            "flickr_url": img_info["flickr_url"],
+            "width": img_info["width"],
+            "height": img_info["height"],
+            "segments_info": []
+        }
+
+        img_json = json.dumps(img_dict, indent=4)
+
+        with open(json_folder + img_name_json, "w") as file:
+            file.write(img_json)
+
+    return
 
     img_json = data["images"][1]
     img_png = img_json["file_name"].split(".")[0] + ".png"
@@ -49,6 +78,8 @@ def main():
         mask = np.all(img==rgb_id, axis=2)
         print(mask)
         height,width = mask.shape
+        print(height)
+        print()
 
         flat_mask = mask.flatten()
 
