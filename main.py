@@ -3,46 +3,59 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image, ImageOps, ImageColor
+from joblib import Parallel, delayed
+import time
 
 img_folder = "panoptic_val2017/"
 json_folder = "image_json/" # folder for per-image json outputs
+short_file = "short_file.json"
+full_file = "panoptic_val2017.json"
 
+#img_info is from the "images" list in the original json
+def create_img_json(img_info):
+    img_name = img_info["file_name"]
+    imp_name_png = img_name.split(".")[0] + ".png"
+    img_location = img_folder + imp_name_png
+    img_name_json = img_name.split(".")[0] + ".json"
 
+    img_dict = {
+        "id": img_info["id"],
+        "file_name": img_info["file_name"],
+        "flickr_url": img_info["flickr_url"],
+        "width": img_info["width"],
+        "height": img_info["height"],
+        "segments_info": []
+    }
 
-    
+    img_json = json.dumps(img_dict, indent=4)
+
+    with open(json_folder + img_name_json, "w") as file:
+        file.write(img_json)    
 
 
 
 def main():
 
     # import json
-    with open('short_file.json', 'r') as f:
+    with open(full_file, 'r') as f:
         data = json.load(f)
 
     #print(json.dumps(data["images"], indent = 4, sort_keys=True))
 
 #    for image in data["images"]:
 #        print(json.dumps(image, indent = 4, sort_keys=True))
+    start = time.time()
+    Parallel(n_jobs=4)(delayed(create_img_json)(img_info) for img_info in data["images"])  
+    stop = time.time()
+    duration = stop - start
+    print("Parallel:" + str(duration))
 
-    for img_info in data["images"]:
-        img_name = img_info["file_name"]
-        imp_name_png = img_name.split(".")[0] + ".png"
-        img_location = img_folder + imp_name_png
-        img_name_json = img_name.split(".")[0] + ".json"
-
-        img_dict = {
-            "id": img_info["id"],
-            "file_name": img_info["file_name"],
-            "flickr_url": img_info["flickr_url"],
-            "width": img_info["width"],
-            "height": img_info["height"],
-            "segments_info": []
-        }
-
-        img_json = json.dumps(img_dict, indent=4)
-
-        with open(json_folder + img_name_json, "w") as file:
-            file.write(img_json)
+    # start = time.time()
+    # for img_info in data["images"]:
+    #     create_img_json(img_info)
+    # stop = time.time()
+    # duration = stop - start
+    # print("For:" + str(duration))
 
     return
 
